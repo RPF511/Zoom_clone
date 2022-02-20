@@ -36,57 +36,79 @@ function countRoomUser(roomName){
 
 wsServer.on("connection", socket => {
     socket.nickname = socket.id;
-    wsServer.sockets.emit("room_change", publicRooms());
-    socket.onAny((event) => {
-        console.log("event : ",event);
-    });
-    socket.on("enter_room", (roomName,nickName,showRoom) => {
-        // console.log(socket.rooms);
-        socket.nickname = nickName;
+    socket.on("join_room", (roomName) => {
+        // socket.nickname = nickName;
         socket.join(roomName);
-        // console.log(socket.rooms);
-        showRoom(roomName, countRoomUser(roomName));
-        socket.to(roomName).emit("welcome", socket.nickname, countRoomUser(roomName));
-        wsServer.sockets.emit("room_change", publicRooms());
+        socket.to(roomName).emit("welcome");
+        // wsServer.sockets.emit("room_change", publicRooms());
     });
-    socket.on("disconnecting", () => {
-        socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname, countRoomUser(room) - 1 ));
+
+    socket.on("offer", (offer, roomName) => {
+        socket.to(roomName).emit("offer",offer);
     });
-    socket.on("disconnect", ()=> {
-        wsServer.sockets.emit("room_change", publicRooms());
+
+    socket.on("answer", (answer, roomName) => {
+        socket.to(roomName).emit("answer", answer);
     });
-    socket.on("new_message", (msg, room, done) => {
-        socket.to(room).emit("new_message", socket.nickname, msg);
-        done();
-    });
-    socket.on("change_nickname", (new_name, room) => {
-        let old_name = socket.nickname;
-        socket.nickname = new_name;
-        socket.to(room).emit("change_nickname", old_name, new_name);
+
+    socket.on("ice", (ice, roomName) => {
+        socket.to(roomName).emit("ice", ice);
     });
 });
 
-// const server = http.createServer(app);
-// const wss = new WebSocket.Server({ server });
-
-
-// const sockets = [];
-
-// wss.on("connection", (socket) => {
-//     sockets.push(socket);
-//     socket["nickname"] = "Anon";
-//     console.log("connected from client");
-//     socket.on("message", (msg) => {
-//         const message = JSON.parse(msg.toString("utf8"));
-//         console.log(msg.toString("utf8"));
-//         switch(message.type){
-//             case "new_message":
-//                 sockets.forEach((aSocket)  => aSocket.send(`${socket.nickname} : ${message.payload}`));
-//             case "nickname":
-//                 socket["nickname"] = message.payload;
-//         };
+// wsServer.on("connection", socket => {
+//     socket.nickname = socket.id;
+//     wsServer.sockets.emit("room_change", publicRooms());
+//     socket.onAny((event) => {
+//         console.log("event : ",event);
 //     });
-//     socket.on("close", () => {console.log("disconnected from client")});
+//     socket.on("enter_room", (roomName,nickName,showRoom) => {
+//         // console.log(socket.rooms);
+//         socket.nickname = nickName;
+//         socket.join(roomName);
+//         // console.log(socket.rooms);
+//         showRoom(roomName, countRoomUser(roomName));
+//         socket.to(roomName).emit("welcome", socket.nickname, countRoomUser(roomName));
+//         wsServer.sockets.emit("room_change", publicRooms());
+//     });
+//     socket.on("disconnecting", () => {
+//         socket.rooms.forEach((room) => socket.to(room).emit("bye", socket.nickname, countRoomUser(room) - 1 ));
+//     });
+//     socket.on("disconnect", ()=> {
+//         wsServer.sockets.emit("room_change", publicRooms());
+//     });
+//     socket.on("new_message", (msg, room, done) => {
+//         socket.to(room).emit("new_message", socket.nickname, msg);
+//         done();
+//     });
+//     socket.on("change_nickname", (new_name, room) => {
+//         let old_name = socket.nickname;
+//         socket.nickname = new_name;
+//         socket.to(room).emit("change_nickname", old_name, new_name);
+//     });
 // });
+
+// // const server = http.createServer(app);
+// // const wss = new WebSocket.Server({ server });
+
+
+// // const sockets = [];
+
+// // wss.on("connection", (socket) => {
+// //     sockets.push(socket);
+// //     socket["nickname"] = "Anon";
+// //     console.log("connected from client");
+// //     socket.on("message", (msg) => {
+// //         const message = JSON.parse(msg.toString("utf8"));
+// //         console.log(msg.toString("utf8"));
+// //         switch(message.type){
+// //             case "new_message":
+// //                 sockets.forEach((aSocket)  => aSocket.send(`${socket.nickname} : ${message.payload}`));
+// //             case "nickname":
+// //                 socket["nickname"] = message.payload;
+// //         };
+// //     });
+// //     socket.on("close", () => {console.log("disconnected from client")});
+// // });
 
 httpServer.listen(3000, handleListen);
